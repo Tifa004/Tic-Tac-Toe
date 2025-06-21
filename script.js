@@ -182,51 +182,62 @@ const Controller = (function(){
     }
 })();
 
-const DOM=(function(){
-
-    const p1=document.getElementById('player1');
-    const p2=document.getElementById('player2');
-    const container =document.querySelector('.player-inputs');
-    const start= document.getElementById('startBtn');
+const DOM = (function () {
+    const p1 = document.getElementById('player1');
+    const p2 = document.getElementById('player2');
+    const container = document.querySelector('.player-inputs');
+    const start = document.getElementById('startBtn');
+    const reset = document.getElementById('resetBtn');
     const message = document.getElementById('message');
-    const cells = document.querySelectorAll('.board button')
-    const reset = document.getElementById('resetBtn')
+    const cells = document.querySelectorAll('.board button');
 
-    start.addEventListener('click',()=>{
-        if (p1.value!='' && p2.value!=''){
-            Players.setup({ name: p1.value, mark:'x'},{name:p2.value,mark:'o'});
+    // Named handler so it can be removed later
+    function handleCellClick(e) {
+        let player = Controller.checkTurn();
+        let x = e.target.dataset.x;
+        let y = e.target.dataset.y;
+        const result = Controller.playGame(x, y);
+        e.target.textContent = player.mark;
+
+        if (result !== null) {
+            message.textContent = result;
+        }
+    }
+
+    start.addEventListener('click', () => {
+        if (p1.value !== '' && p2.value !== '') {
+            Players.setup({ name: p1.value, mark: 'x' }, { name: p2.value, mark: 'o' });
             start.remove();
             p1.remove();
             p2.remove();
-            message.textContent=`${p1.value} vs ${p2.value}`;
-            message.style.fontSize='1.5rem';
+            message.textContent = `${p1.value} vs ${p2.value}`;
+            message.style.fontSize = '1.5rem';
+
             cells.forEach(btn => {
-                btn.addEventListener('click',(e) => {
-                let player = Controller.checkTurn();
-                    let x = e.target.dataset.x;
-                    let y = e.target.dataset.y;
-                    message.textContent=Controller.playGame(x,y)===null?message.textContent:Controller.playGame(x,y);
-                    e.target.textContent = player.mark;
-                    
-                });
+                btn.addEventListener('click', handleCellClick, {once: true});
             });
-        } else{
-            message.textContent='Insert Names';
-            message.style.color='red';
-            p1.addEventListener('focus',()=>{
-                message.textContent='Waiting to start...'
-                message.style.color='black';
-            })
+        } else {
+            message.textContent = 'Insert Names';
+            message.style.color = 'red';
+
+            p1.addEventListener('focus', () => {
+                message.textContent = 'Waiting to start...';
+                message.style.color = 'black';
+            }, { once: true });
         }
     });
-    reset.addEventListener('click',() => {
+
+    reset.addEventListener('click', () => {
         [p1, p2, start].forEach(el => container.appendChild(el));
         gameBoard.resetBoard();
-        message.textContent='Waiting to start...'
-        p1.value='';
-        p2.value='';
-        cells.forEach(btn => btn.textContent='');
-        Players.setup({},{})
-    });
+        message.textContent = 'Waiting to start...';
+        message.style.color = 'black';
+        p1.value = '';
+        p2.value = '';
 
+        cells.forEach(btn => {
+            btn.textContent = '';
+            btn.removeEventListener('click', handleCellClick);
+        });
+    });
 })();
